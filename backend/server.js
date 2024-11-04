@@ -21,14 +21,24 @@ app.use(cors({
 app.use(express.json()); // Parse JSON bodies
 app.use('/uploads', express.static('uploads')); // Serve static files from 'uploads' directory
 
-// Configure session middleware
-// Session configuration in server.js
+const mongoUrl = process.env.MONGODB_URI;
+
+console.log('MongoDB URI:', mongoUrl);  // Log the MongoDB URI for debugging
+
+if (!mongoUrl) {
+    throw new Error('MONGODB_URI environment variable is not set.');
+}
+
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key', // Use a secure key
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }), // Use MongoDB for session storage
-    cookie: { secure: false } // Set to true if using HTTPS
+    store: MongoStore.create({ mongoUrl }),  // Use mongoUrl for session storage
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'Lax',
+    }
 }));
 
 
